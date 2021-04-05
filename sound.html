@@ -11,6 +11,7 @@
             var h = window.innerHeight;
             //create a variable for the sound file
             var boing;
+            var fireball;
 
             function preload() {
                 soundFormats('mp3', 'ogg');
@@ -19,6 +20,7 @@
 
             function setup() {
                 createCanvas(w,h);
+                fireball = loadImage("fireball.png");
             }
 
             function draw() {
@@ -27,6 +29,8 @@
                     //Play sound attaced to boing variable
                     boing.play();
                 }
+                //Image(variableName, x, y, width, height)
+                image(fireball, w/2, h/2, 100, 100)
             }
         </script>
     </body>
