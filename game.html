@@ -1,0 +1,514 @@
+<html>
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.2.0/p5.min.js"></script>
+        <script defer src="https://unpkg.com/p5.collide2d"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Limelight&family=Montserrat&display=swap" rel="stylesheet">
+        <style>
+            body {
+                margin: 0;
+                background-color: #46c74c;
+            }
+            #name {
+                font-family: 'Limelight', cursive;
+                font-size: 72px;
+                margin: 0px;
+                text-align: center;
+            }
+            #menu {
+                display: block;
+                position: absolute;
+                z-index: 1; 
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0,0,0,0.4);
+            }
+            #menu-content, #list, #total, #pausePage {
+                background-color: #46c74c;
+                margin: auto;
+                padding: 20px;
+                width: 50%;
+                height: 75%;
+                position: absolute;
+                top: 10%;
+                right: 25%;
+                border-radius: 25px;
+            }
+            #bttn {
+                background-color: #99e376;
+                width: 90%;
+                height: 75%;
+                position: absolute;
+                top: 20%;
+                left: 5%;
+                border-radius: 25px;
+            }
+            #rl, #results, #pause, #rl2 {
+                display: none;
+                position: absolute;
+                z-index: 2; 
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0,0,0,0.4);
+            }
+            .play, .rule {
+                background-color: #f7f69c;
+                width: 50%;
+                height: 20%;
+                text-align: center;
+                border: none;
+                border-radius: 25px;
+                font-family: 'Montserrat', sans-serif;
+                font-size: 60px;
+            }
+            .plybttn {
+                position: absolute;
+                top: 20%;
+                left: 25%;
+            }
+            .rlbttn {
+                position: absolute;
+                top: 60%;
+                left: 25%;
+            }
+            .rlbttn2 {
+                position: absolute;
+                top: 10%;
+                left: 25%;
+            }
+            .play:hover, .rule:hover {
+                background-color: #e6e59c;
+                cursor: pointer;
+            }
+            .begin {
+                position: absolute;
+                bottom: 10%;
+                left: 25%;
+            }
+            .end {
+                background-color: #f7f69c;
+                width: 50%;
+                height: 20%;
+                text-align: center;
+                border: none;
+                border-radius: 25px;
+                font-family: 'Montserrat', sans-serif;
+                font-size: 50px;
+                position: absolute;
+                bottom: 30%;
+                left: 25%;
+            }
+            .end2 {
+                position: absolute;
+                bottom: 5%;
+                left: 25%;
+            }
+            .restart {
+                position: absolute;
+                top: 40%;
+                left: 25%;
+            }
+            .resume {
+                position: absolute;
+                bottom: 10%;
+                left: 25%;
+            }
+            #score {
+                font-family: 'Montserrat', sans-serif;
+                font-size: 50px;
+            }
+            #endScore {
+                font-family: 'Montserrat', sans-serif;
+                font-size: 50px;
+                position: absolute;
+                left: 35%;
+                top: 10%;
+            }
+        </style>
+    </head>
+    <body>
+        <p id = "score">Score: 0</p>
+        <div id="menu">
+            <div id="menu-content">
+                <p id="name">CIRCLES</p>
+                <div id="bttn">
+                    <button onclick="play()" class="play plybttn">Play</button>
+                    <button onclick="rule()" class="rule rlbttn">Rules</button>
+                </div>
+            </div>  
+        </div>
+        <div id="rl">
+            <div id="list">
+                <p id="name">RULES</p>
+                <div id="bttn">
+                    <ul>
+                        <li>WASD</li>
+                        <li>collect points by touching yellow circles. each time you do, creates another black circle</li>
+                        <li>dont touch black circles. game over</li>
+                        <li>power ups: appears occasionally, pink erases some black circles, green speeds up the player, blue slows down the black circles</li>
+                        <li>to pause press esc</li>
+                    </ul>
+                    <button onclick="x2()" class="play begin">Play</button>
+                </div>
+            </div>
+        </div>
+        <div id="results">
+            <div id="total">
+                <p id="name">Good Job</p>
+                <div id="bttn">
+                    <p id="endScore">Score:</p>
+                    <button onclick="playAgain()" class="play end">Play Again</button>
+                    <button onclick="home()" class="play end2">Menu</button>
+                </div>
+                    
+            </div>
+        </div>
+        <div id="pause">
+            <div id="pausePage">
+                <p id="name">PAUSED</p>
+                <div id="bttn">
+                    <button onclick="rule()" class="play rlbttn2">Rules</button>
+                    <button onclick="playAgain()" class="play restart">Restart</button>
+                    <button onclick="resume()" class="play resume">Resume</button>
+                </div>
+                    
+            </div>
+        </div>
+          
+        <script>
+            var menu = document.getElementById("menu");
+            var results = document.getElementById("results");
+            var rl = document.getElementById("rl");
+            var pause = document.getElementById("pause");
+            var w = window.innerWidth * .90;
+            var h = window.innerHeight * .85;
+            var player;
+            var ball;
+            var coin;
+            var slow;
+            var speed;
+            var eliminate;
+            var hit = false;
+            var hitBall = false;
+            var hitSlow = false;
+            var hitSpeed = false;
+            var hitEliminate = false;
+            var gameStart = true;
+            var gameEnd = true;
+            var powerSlow = false;
+            var powerSpeed = false;
+            var powerEliminate = false;
+            var score = 0;
+            var ballArray = [];
+            let powerUpSlow;
+            let powerUpSpeed;
+            let choice = Math.floor(Math.random(0,3));
+            let prevMilli = 0;
+            let curMillisShow= 0;
+            let curMillisHide = 0;
+
+            function play() {
+                menu.style.display = "none";
+                results.style.display = "none";
+                gameStart = false;
+                gameEnd = false;
+                loop();
+            }
+
+            function rule() {
+                menu.style.display = "none";
+                rl.style.display = "block";
+                pause.style.display = "none";
+                gameStart = true;
+                gameEnd = true;
+            }
+
+            function x2() {
+                rl.style.display = "none";
+                pause.style.display = "none";
+                gameStart = false;
+                gameEnd = false;
+                loop();
+            }
+
+            function resume() {
+                rl.style.display = "none";
+                pause.style.display = "none";
+                gameStart = false;
+                gameEnd = false;
+                loop();
+            }
+
+            function home() {
+                location.reload();
+            }
+
+            function playAgain() {
+                loop();
+                results.style.display = "none";
+                pause.style.display = "none";
+                coin.x = random(0, w-50);
+                coin.y = random(0, h-50);
+                player.x = w/2;
+                player.y = h/2;
+                ballArray = [];
+                ball.x = 0;
+                ball.y = random(0, h-50);
+                powerSlow = false;
+                powerSpeed = false;
+                powerEliminate = false;
+                gameStart = false;
+                gameEnd = false;
+                score = 0;
+                document.getElementById("score").innerHTML = "Score: " + score;
+            }
+
+            function keyPressed() {
+                if ((keyCode === ESCAPE) && (gameStart == false) && (gameEnd == false)) {
+                    noLoop();
+                    pause.style.display = "block";
+                }
+            }
+
+            function setup() {
+                var cnv = createCanvas(w,h);
+                this.x = window.innerWidth * .05;
+                this.y = window.innerHeight * .12;
+                cnv.position(this.x, this.y, 'fixed');
+                player = new player();
+                ball = new ball();
+                coin = new coin();
+                slow = new slow();
+                speed = new speed();
+                eliminate = new eliminate();
+                noLoop();
+            }
+
+            function draw() {
+                clear();
+                background('#99e376');
+                player.show();
+                player.update();
+                coin.show();
+                coin.update();
+                curMillisShow += millis() - prevMilli
+                curMillisHide += millis() - prevMilli
+                prevMilli = millis();
+                if(curMillisShow >= 10000) {
+                    if (choice == 0) {
+                        slow.show();
+                        powerSlow = true;
+                    }
+                    if (choice == 1) {
+                        speed.show();
+                        powerSpeed = true;
+                    }
+                    if (choice == 2) {
+                        eliminate.show();
+                        eliminate.update();
+                        powerEliminate = true;
+                    }
+                }
+                if(curMillisHide >= 15000) {
+                    choice = floor(random(0,3));
+                    slow.x = random(0, w-50);
+                    slow.y = random(0, h-50);
+                    speed.x = random(0, w-50);
+                    speed.y = random(0, h-50);
+                    eliminate.x = random(0, w-50);
+                    eliminate.y = random(0, h-50);
+                    powerSlow = false;
+                    powerSpeed = false;
+                    powerEliminate = false;
+                    curMillisHide = 0;
+                    curMillisShow = 0;
+                }
+                ball.show();
+                ball.move();
+                for (let i = 0; i < ballArray.length; i++) {
+                    ballArray[i].show();
+                    ballArray[i].move();
+                }
+            }
+
+            function player() {
+                this.x = w/2;
+                this.y = h/2;
+                this.show = function() {
+                    fill(color('red'));
+                    ellipse(this.x, this.y, 50, 50);
+                    ellipseMode(CORNER);
+                    noStroke();
+                }
+                this.update = function() {
+                    hitSpeed = collideCircleCircle(speed.x, speed.y, 50, player.x, player.y, 50);
+                    if ((hitSpeed == true) && (powerSpeed == true)) {
+                        powerUpSpeed = millis();
+                        curMillisHide = 15000;
+                    }
+                    if (powerUpSpeed + 8000 > millis()) {
+                        if ((this.y > 5) && (keyIsDown(87))) {
+                            this.y -= 15; //up
+                        }
+                        if ((this.y < h-60) && (keyIsDown(83))) {
+                            this.y += 15; //down
+                        }
+                        if ((this.x > 3) && (keyIsDown(65))) {
+                            this.x -= 15; //left
+                        }
+                        if ((this.x < w-60) && (keyIsDown(68))) {
+                            this.x += 15; //right
+                        }
+                    }
+                    else if ((this.y > 5) && (keyIsDown(87))) {
+                        this.y -= 10; //up
+                    }
+                    else if ((this.y < h-60) && (keyIsDown(83))) {
+                        this.y += 10; //down
+                    }
+                    else if ((this.x > 3) && (keyIsDown(65))) {
+                        this.x -= 10; //left
+                    }
+                    else if ((this.x < w-60) && (keyIsDown(68))) {
+                        this.x += 10; //right
+                    }
+                }
+            }
+
+            function ball() {
+                this.x = 0;
+                this.y = random(0, h-50);
+                this.right = true;
+                this.show = function() {
+                    fill(color('black'));
+                    ellipse(this.x, this.y, 50, 50);
+                    ellipseMode(CORNER);
+                    noStroke();
+                }
+                this.move = function() {
+                    if(this.x >= w-50) {
+                        this.right = false;
+                    }
+                    else if (this.x <= 0 ) {
+                        this.right = true;
+                    }
+                    if(this.right) {
+                        hitBall = collideCircleCircle(this.x, this.y, 50, player.x, player.y, 50);
+                        if (hitBall == true) {
+                            document.getElementById("endScore").innerHTML = "Score: " + score;
+                            score = 0;
+                            results.style.display = "block";
+                            gameEnd = true;
+                            ballArray = [];
+                            ball.x = 0;
+                            ball.y = random(0, h-50);
+                            noLoop();
+                        }
+                        hitSlow = collideCircleCircle(slow.x, slow.y, 50, player.x, player.y, 50);
+                        if ((hitSlow == true) && (powerSlow == true)) {
+                            powerUpSlow = millis();
+                            curMillisHide = 15000;
+                        }
+                        if (powerUpSlow + 8000 > millis()) {
+                            this.x += 5;
+                        }
+                        else {
+                            this.x += 10;
+                        }
+                    }
+                    else {
+                        hitBall = collideCircleCircle(this.x, this.y, 50, player.x, player.y, 50);
+                        if (hitBall == true) {
+                            document.getElementById("endScore").innerHTML = "Score: " + score;
+                            score = 0;
+                            results.style.display = "block";
+                            gameEnd = true;
+                            ballArray = [];
+                            ball.x = 0;
+                            ball.y = random(0, h-50);
+                            noLoop();
+                        }
+                        hitSlow = collideCircleCircle(slow.x, slow.y, 50, player.x, player.y, 50);
+                        if ((hitSlow == true) && (powerSlow == true)) {
+                            powerUpSlow = millis();
+                            curMillisHide = 15000;
+                        }
+                        if (powerUpSlow + 8000 > millis()) {
+                            this.x -= 5;
+                        }
+                        else {
+                            this.x -= 10;
+                        }
+                    }
+                }
+            }
+
+            function coin() {
+                this.x = random(0, w-50);
+                this.y = random(0, h-50);
+                this.show = function() {
+                    fill(color('yellow'));
+                    ellipse(this.x, this.y, 50, 50);
+                    noStroke();
+                }
+                this.update = function() {
+                    hit = collideCircleCircle(this.x, this.y, 50, player.x, player.y, 50);
+                    if (hit == true) {
+                        this.x = random(0, w-50);
+                        this.y = random(0, h-50);
+                        score++;
+                        document.getElementById('score').innerHTML = "Score: " + score;
+                        ballArray.push(Object.create(ball));
+                        ballArray[ballArray.length-1].x = 0;
+                        ballArray[ballArray.length-1].y = random(0,h-50);
+                    }
+                }
+            }
+
+            function slow() {
+                this.x = random(0, w-50);
+                this.y = random(0, h-50);
+                this.show = function() {
+                    fill(color('blue'));
+                    ellipse(this.x, this.y, 50, 50);
+                    noStroke();
+                }
+            }
+
+            function speed() {
+                this.x = random(0, w-50);
+                this.y = random(0, h-50);
+                this.show = function() {
+                    fill(color('green'));
+                    ellipse(this.x, this.y, 50, 50);
+                    noStroke();
+                }
+            }
+
+            function eliminate() {
+                this.x = random(0, w-50);
+                this.y = random(0, h-50);
+                this.show = function() {
+                    fill(color('pink'));
+                    ellipse(this.x, this.y, 50, 50);
+                    noStroke();
+                }
+                this.update = function() {
+                    hitEliminate = collideCircleCircle(this.x, this.y, 50, player.x, player.y, 50);
+                    if ((hitEliminate == true) && (powerEliminate == true)) {
+                        curMillisHide = 15000;
+                        for (var i = 0; i < ballArray.length; i++) {
+                            ballArray.pop();
+                        }
+                    }
+                }
+            }
+
+        </script>
+    </body>
+</html>
